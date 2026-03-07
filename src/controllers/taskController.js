@@ -1,20 +1,13 @@
 import Task from "../models/Task.js";
 
-/**
- * Create Task Controller
- * Handles task creation for the authenticated user
- *
- * @param {object} req - Express request object
- * @param {object} res - Express response object
- */
-export const createTask = async (req, res) => {
+export const createTask = async (request, response) => {
   try {
     // Get task data from request body
-    const { title, description } = req.body;
+    const { title, description } = request.body;
 
     // Validate that title is provided (required field)
     if (!title) {
-      return res.status(400).json({
+      return response.status(400).json({
         success: false,
         message: "Please provide a task title",
       });
@@ -28,37 +21,30 @@ export const createTask = async (req, res) => {
     });
 
     // Return created task
-    res.status(201).json({
+    response.status(201).json({
       success: true,
       message: "Task created successfully",
       task: newTask,
     });
   } catch (error) {
     console.error("Create task error:", error);
-    res.status(500).json({
+    response.status(500).json({
       success: false,
       message: "Error creating task",
     });
   }
 };
 
-/**
- * Get All Tasks Controller
- * Retrieves all tasks belonging to the authenticated user
- *
- * @param {object} req - Express request object
- * @param {object} res - Express response object
- */
-export const getTasks = async (req, res) => {
+export const getTasks = async (request, response) => {
   try {
     // Find all tasks where owner matches authenticated user ID
     // Sort by creation date (newest first)
-    const tasks = await Task.find({ owner: req.user._id })
+    const tasks = await Task.find({ owner: request.user._id })
       .sort({ createdAt: -1 })
       .populate("owner", "name email");
 
     // Return tasks
-    res.status(200).json({
+    response.status(200).json({
       success: true,
       message: "Tasks retrieved successfully",
       count: tasks.length,
@@ -66,31 +52,24 @@ export const getTasks = async (req, res) => {
     });
   } catch (error) {
     console.error("Get tasks error:", error);
-    res.status(500).json({
+    response.status(500).json({
       success: false,
       message: "Error retrieving tasks",
     });
   }
 };
 
-/**
- * Delete Task Controller
- * Deletes a specific task (only if user is the owner)
- *
- * @param {object} req - Express request object
- * @param {object} res - Express response object
- */
-export const deleteTask = async (req, res) => {
+export const deleteTask = async (request, response) => {
   try {
     // Get task ID from URL parameters
-    const taskId = req.params.id;
+    const taskId = request.params.id;
 
     // Find the task by ID
     const task = await Task.findById(taskId);
 
     // Check if task exists
     if (!task) {
-      return res.status(404).json({
+      return response.status(404).json({
         success: false,
         message: "Task not found",
       });
@@ -98,8 +77,8 @@ export const deleteTask = async (req, res) => {
 
     // Check if authenticated user is the owner of the task
     // Convert to string for comparison since they are ObjectIds
-    if (task.owner.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
+    if (task.owner.toString() !== request.user._id.toString()) {
+      return response.status(403).json({
         success: false,
         message: "You are not authorized to delete this task",
       });
@@ -109,30 +88,23 @@ export const deleteTask = async (req, res) => {
     await Task.findByIdAndDelete(taskId);
 
     // Return success response
-    res.status(200).json({
+    response.status(200).json({
       success: true,
       message: "Task deleted successfully",
     });
   } catch (error) {
     console.error("Delete task error:", error);
-    res.status(500).json({
+    response.status(500).json({
       success: false,
       message: "Error deleting task",
     });
   }
 };
 
-/**
- * Update Task Controller
- * Updates a specific task (only if user is the owner)
- *
- * @param {object} req - Express request object
- * @param {object} res - Express response object
- */
-export const updateTask = async (req, res) => {
+export const updateTask = async (request, response) => {
   try {
     // Get task ID from URL parameters
-    const taskId = req.params.id;
+    const taskId = request.params.id;
 
     // Get update data from request body
     const { title, description, completed } = req.body;
@@ -142,7 +114,7 @@ export const updateTask = async (req, res) => {
 
     // Check if task exists
     if (!task) {
-      return res.status(404).json({
+      return response.status(404).json({
         success: false,
         message: "Task not found",
       });
@@ -150,7 +122,7 @@ export const updateTask = async (req, res) => {
 
     // Check if authenticated user is the owner of the task
     if (task.owner.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
+      return reponse.status(403).json({
         success: false,
         message: "You are not authorized to update this task",
       });
@@ -165,14 +137,14 @@ export const updateTask = async (req, res) => {
     await task.save();
 
     // Return updated task
-    res.status(200).json({
+    response.status(200).json({
       success: true,
       message: "Task updated successfully",
       task: task,
     });
   } catch (error) {
     console.error("Update task error:", error);
-    res.status(500).json({
+    response.status(500).json({
       success: false,
       message: "Error updating task",
     });
